@@ -1,0 +1,19 @@
+---
+ - name: install devel packages
+   yum: name={{ item }} state=present
+   with_items:
+       - openssl
+       - openssl-devel
+       - clang-devel
+ # install rust
+ - name: install rust
+   shell: "{{ item }}"
+   args:
+       chdir: /tmp/
+       creates: /usr/local/bin/cargo
+   with_items:
+       - "curl https://static.rust-lang.org/dist/rust-{{ rust_version }}-x86_64-unknown-linux-gnu.tar.gz | tar xzvf -"
+       - cd rust-{{ rust_version }}-x86_64-unknown-linux-gnu && ./install.sh
+   notify:
+       - ldconfig
+       - cleanup

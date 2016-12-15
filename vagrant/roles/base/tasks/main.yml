@@ -1,0 +1,4 @@
+---
+ # install libselinux-python for ansible provisioning requirements
+ - name: install libselinux-python
+   yum: name=libselinux-python state=present

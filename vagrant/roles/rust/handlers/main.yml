@@ -1,0 +1,5 @@
+---
+ - name: ldconfig
+   command: ldconfig
+ - name: cleanup
+   command: rm -fr /tmp/rust-{{ rust_version }}-x86_64-unknown-linux-gnu

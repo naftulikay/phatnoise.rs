@@ -1,0 +1,7 @@
+[package]
+name = "phatnoise"
+version = "0.1.0"
+authors = ["Naftuli Kay <rfkrocktk@gmail.com>"]
+
+[dependencies]
+id3 = "0.1.11"

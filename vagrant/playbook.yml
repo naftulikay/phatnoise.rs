@@ -1,0 +1,6 @@
+---
+ - hosts: all
+   become: yes
+   roles:
+       - role: devel
+       - { role: rust, rust_version: "1.13.0" }

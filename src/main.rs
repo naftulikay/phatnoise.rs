@@ -1,13 +1,17 @@
-extern crate id3;
+extern crate walkdir;
 
-use id3::Tag;
+use walkdir::{DirEntry, WalkDir};
 
 fn main() {
-    let tag = Tag::read_from_path("test.mp3").unwrap();
-    // get either the album artist, or the artist, or return "unknown artist"
-    let artist = tag.album_artist().or(tag.artist()).unwrap_or("Unknown Artist");
-    let album = tag.album().unwrap_or("Unknown Album");
-    let genre = tag.genre().unwrap_or("Unknown Genre");
+    // so tempted to write let walker = TexasRanger
+    let walker = WalkDir::new("/home/naftuli/Music").min_depth(1).into_iter();
 
-    println!("Artist: {}; Album: {}; Genre: {}", artist, album, genre);
+    // find them
+    for entry in walker.filter_map(|e| e.ok()).filter(|e| is_media_file(e)) {
+        println!("{}", entry.path().display());
+    }
+}
+
+fn is_media_file(entry: &DirEntry) -> bool {
+    entry.path().is_file() && entry.path().to_str().map(|s| s.ends_with(".mp3")).unwrap_or(false)
 }

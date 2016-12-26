@@ -4,4 +4,7 @@ version = "0.1.0"
 authors = ["Naftuli Kay <rfkrocktk@gmail.com>"]
 
 [dependencies]
+# fts = "0.1.4"
 id3 = "0.1.11"
+regex = "0.1.80"
+walkdir = "1"

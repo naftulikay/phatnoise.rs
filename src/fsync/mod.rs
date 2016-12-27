@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::string::String;
 
+use regex::Regex;
+
 pub struct MediaFile {
     path: PathBuf,
     base: Arc<PathBuf>
@@ -25,6 +27,28 @@ impl Hash for MediaFile {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
+}
+
+pub fn is_media_file(path: &Path) -> bool {
+    lazy_static! {
+        static ref MEDIA_FILE_EXTENSION: Regex = Regex::new(r"(?i)(mp3)$").unwrap();
+    }
+
+    MEDIA_FILE_EXTENSION.is_match(
+        // get the extension OsStr, convert to an Option<&str>, and unwrap or return empty string
+        path.extension().and_then(|v| v.to_str()).unwrap_or("")
+    )
+}
+
+#[test]
+fn test_is_media_file() {
+    // test false cases
+    assert!(!is_media_file(Path::new("/home/naftuli/Music/Directory")));
+    assert!(!is_media_file(Path::new("/home/naftuli/Music/Directory/Folder.jpg")));
+
+    // test true cases
+    assert!(is_media_file(Path::new("/home/naftuli/Music/01 - Track.mp3")));
+    assert!(is_media_file(Path::new("/home/naftuli/Music/01 - Track.MP3")));
 }
 
 #[test]

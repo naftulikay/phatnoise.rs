@@ -1,24 +1,34 @@
+use std::ascii::AsciiExt;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::string::String;
 
 use regex::Regex;
+use unicode_casefold::UnicodeCaseFold;
 
 pub struct MediaFile {
     path: PathBuf,
     base: Arc<PathBuf>
 }
 
+static ILLEGAL_CHARS: &'static [char] = &['\t', ':'];
+
 impl MediaFile {
 
-    pub fn new(path: &Path, base: &Path) -> MediaFile {
-        MediaFile{ path: path.to_owned(), base: Arc::new(base.to_owned()) }
+    pub fn new<P1, P2>(path: P1, base: P2) -> MediaFile
+            where P1: Into<PathBuf>, P2: Into<PathBuf> {
+        MediaFile{ path: path.into(), base: Arc::new(base.into()) }
     }
 
     fn id(&self) -> String {
-        // FIXME strip all non ASCII, all colons, and all tab characters
-        self.path.strip_prefix(self.base.as_path()).unwrap().to_str().unwrap().to_lowercase()
+        self.path.strip_prefix(self.base.as_path()).unwrap().to_string_lossy().chars()
+        //  get only allowed ascii characters
+            .filter(|c| c.is_ascii() && !ILLEGAL_CHARS.contains(&c))
+        //  bounce down to lowercase
+            .flat_map(|c| c.case_fold())
+        //  collect into a string
+            .collect()
     }
 }
 
@@ -53,12 +63,26 @@ fn test_is_media_file() {
 
 #[test]
 fn test_media_file_identity() {
-    let base = Path::new("/home/naftuli/Music");
+    let base = Path::new("Music");
 
-    let f = MediaFile::new(
-        Path::new("/home/naftuli/Music/Andrew W. K./I Get Wet/02 - Party Hard.mp3"),
-        base
+    // test bounce to lowercase
+    assert_eq!(
+        "andrew w. k./i get wet/02 - party hard.mp3",
+        format!("{}", MediaFile::new("Music/Andrew W. K./I Get Wet/02 - Party Hard.mp3", base).id())
     );
-
-    assert_eq!("andrew w. k./i get wet/02 - party hard.mp3", format!("{}", f.id()));
+    // test supported ascii characters
+    assert_eq!(
+        "mle/everyday behavior/01 - got it all.mp3",
+        format!("{}", MediaFile::new("Music/Mêlée/Everyday Behavior/01 - Got It All.mp3", base).id())
+    );
+    // test strip colons
+    assert_eq!(
+        "apocalyptica/begin again/01 - track thing.mp3",
+        format!("{}", MediaFile::new("Music/Apocalyptica/Begin: Again/01 - Track: Thing.mp3", base).id())
+    );
+    // test strip tabs
+    assert_eq!(
+        "theend/something.mp3",
+        format!("{}", MediaFile::new("Music/The\tEnd/Something.mp3", base).id())
+    );
 }

@@ -1,4 +1,3 @@
-use std::ascii::AsciiExt;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -12,7 +11,8 @@ pub struct MediaFile {
     base: Arc<PathBuf>
 }
 
-static ILLEGAL_CHARS: &'static [char] = &['\t', ':'];
+static SPACE_CHARS: &'static [char] = &['\t'];
+static DELETE_CHARS: &'static [char] = &[':'];
 
 impl MediaFile {
 
@@ -23,11 +23,13 @@ impl MediaFile {
 
     fn id(&self) -> String {
         self.path.strip_prefix(self.base.as_path()).unwrap().to_string_lossy().chars()
-        //  get only allowed ascii characters
-            .filter(|c| c.is_ascii() && !ILLEGAL_CHARS.contains(&c))
-        //  bounce down to lowercase
+            //  delete illegal characters
+            .filter(|c| !DELETE_CHARS.contains(&c))
+            // replace certain characters with a single space character
+            .map(|c| if SPACE_CHARS.contains(&c) { ' ' } else { c })
+            //  bounce down to lowercase
             .flat_map(|c| c.case_fold())
-        //  collect into a string
+            //  collect into a string
             .collect()
     }
 }
@@ -68,21 +70,21 @@ fn test_media_file_identity() {
     // test bounce to lowercase
     assert_eq!(
         "andrew w. k./i get wet/02 - party hard.mp3",
-        format!("{}", MediaFile::new("Music/Andrew W. K./I Get Wet/02 - Party Hard.mp3", base).id())
+        MediaFile::new("Music/Andrew W. K./I Get Wet/02 - Party Hard.mp3", base).id()
     );
     // test supported ascii characters
     assert_eq!(
-        "mle/everyday behavior/01 - got it all.mp3",
-        format!("{}", MediaFile::new("Music/Mêlée/Everyday Behavior/01 - Got It All.mp3", base).id())
+        "mêlée/everyday behavior/01 - got it all.mp3",
+        MediaFile::new("Music/Mêlée/Everyday Behavior/01 - Got It All.mp3", base).id()
     );
     // test strip colons
     assert_eq!(
         "apocalyptica/begin again/01 - track thing.mp3",
-        format!("{}", MediaFile::new("Music/Apocalyptica/Begin: Again/01 - Track: Thing.mp3", base).id())
+        MediaFile::new("Music/Apocalyptica/Begin: Again/01 - Track: Thing.mp3", base).id()
     );
     // test strip tabs
     assert_eq!(
-        "theend/something.mp3",
-        format!("{}", MediaFile::new("Music/The\tEnd/Something.mp3", base).id())
+        "the end/something.mp3",
+        MediaFile::new("Music/The\tEnd/Something.mp3", base).id()
     );
 }

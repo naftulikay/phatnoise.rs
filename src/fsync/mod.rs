@@ -1,13 +1,18 @@
+use std::cmp::{Eq, PartialEq};
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::string::String;
 
 use regex::Regex;
+
 use unicode_casefold::UnicodeCaseFold;
 
+use walkdir::WalkDir;
+
 pub struct MediaFile {
-    path: PathBuf,
+    pub path: PathBuf,
     base: Arc<PathBuf>
 }
 
@@ -21,7 +26,7 @@ impl MediaFile {
         MediaFile{ path: path.into(), base: Arc::new(base.into()) }
     }
 
-    fn id(&self) -> String {
+    pub fn id(&self) -> String {
         self.path.strip_prefix(self.base.as_path()).unwrap().to_string_lossy().chars()
             //  delete illegal characters
             .filter(|c| !DELETE_CHARS.contains(&c))
@@ -34,10 +39,19 @@ impl MediaFile {
     }
 }
 
+impl Eq for MediaFile {}
+
 impl Hash for MediaFile {
 
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
+    }
+}
+
+impl PartialEq for MediaFile {
+
+    fn eq(&self, other: &MediaFile) -> bool {
+        self.id() == other.id()
     }
 }
 
@@ -51,6 +65,23 @@ pub fn is_media_file(path: &Path) -> bool {
         path.extension().and_then(|v| v.to_str()).unwrap_or("")
     )
 }
+
+/// Fetch a list of all media files in the local media library.
+pub fn get_local_media_library<P>(base: P) -> HashSet<MediaFile>
+        where P: Into<PathBuf> {
+    // mask base with a reference counter
+    let base: Arc<PathBuf> = Arc::new(base.into());
+
+    // find all files and directories within the directory excluding the directory itself
+    let walker = WalkDir::new(base.clone().as_path()).min_depth(1).into_iter();
+
+    // find all media files and collect them as MediaFile instances
+    walker.filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file() && is_media_file(e.path()))
+        .map(|e| MediaFile::new(e.path(), base.clone().as_path()))
+        .collect()
+}
+
 
 #[test]
 fn test_is_media_file() {

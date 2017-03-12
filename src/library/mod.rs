@@ -12,7 +12,7 @@ use utils;
 
 use unicode_casefold::UnicodeCaseFold;
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone,Copy,Eq,Debug,PartialEq)]
 pub enum LibrarySource {
     Local,
     DMS

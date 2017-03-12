@@ -20,7 +20,8 @@ use std::path::PathBuf;
 static LOGGING_FORMAT: &'static str = "{d(%Y-%m-%d %H:%M:%S)} {l:5.5} [{T}] {M}: {m}{n}";
 
 fn configure_rayon() {
-    rayon::initialize(rayon::Configuration::new().thread_name(|c| format!("rayon-{:02}", c))).unwrap();
+    rayon::ThreadPoolBuilder::new().thread_name(|c| format!("rayon-cpu-{:02}", c))
+        .build_global().unwrap()
 }
 
 fn configure_logs() {

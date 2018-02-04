@@ -1,11 +1,15 @@
 [package]
 name = "phatnoise"
 version = "0.1.0"
-authors = ["Naftuli Kay <rfkrocktk@gmail.com>"]
+authors = [
+  "Naftuli Kay <me@naftuli.wtf>"
+]
 
 [dependencies]
 id3 = "0.1.11"
 lazy_static = "0.2.2"
 regex = "0.1.80"
+rusoto_polly = "0.31.0"
+threadpool = "1.0"
 unicode-casefold = "0.2.0"
 walkdir = "1"

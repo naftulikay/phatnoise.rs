@@ -1,7 +1,0 @@
----
- - name: ldconfig
-   command: ldconfig
- - name: cleanup
-   file:
-     path: /tmp/rust-{{ rust_version }}-x86_64-unknown-linux-gnu
-     state: absent

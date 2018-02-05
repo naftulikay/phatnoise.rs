@@ -1,0 +1,8 @@
+---
+- name: build
+  hosts: all
+  become: true
+  roles:
+    - role: vagrant-rust-dev
+      rust_addtl_system_packages:
+        - openssl-devel

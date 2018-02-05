@@ -1,34 +1,36 @@
-# -*- mode: ruby -*-
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 # vi: set ft=ruby :
 
+require 'etc'
 require 'shellwords'
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = "bento/centos-7.4"
+  config.vm.hostname = "devel"
 
-  # CentOS 7 Development Machine
-  config.vm.define "devel", autostart: true, primary: true do |devel|
-    devel.vm.box = "bento/centos-7.3"
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  config.vm.network "private_network", type: "dhcp"
 
-    # set the hostname
-    devel.vm.hostname = "rust-devel"
+  # Tweak the VMs configuration.
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = Etc.nprocessors
+    vb.memory = 1024
+    vb.linked_clone = true
+  end
 
-    # Create a private network, which allows host-only access to the machine using a specific IP.
-    devel.vm.network "private_network", type: "dhcp"
-
-    devel.vm.provider "virtualbox" do |vb|
-      vb.cpus = 4
-      vb.memory = 2048
-      vb.linked_clone = true
-    end
-
-    devel.vm.provision "ansible_local" do |ansible|
-      # define playbook
-      ansible.raw_arguments = Shellwords::shellwords(ENV.fetch("ANSIBLE_ARGS", ""))
-      ansible.provisioning_path = "/vagrant/ansible/"
-      ansible.playbook = "vagrant.yml"
-    end
+  # Configure the VM using Ansible
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.galaxy_role_file = "requirements.yml"
+    ansible.galaxy_roles_path = ".ansible/galaxy-roles"
+    ansible.provisioning_path = "/vagrant"
+    ansible.playbook = "vagrant.yml"
+    # allow passing ansible args from environment variable
+    ansible.raw_arguments = Shellwords::shellwords(ENV.fetch("ANSIBLE_ARGS", ""))
   end
 end

@@ -1,3 +1,5 @@
+pub mod crypto;
+pub mod fs;
 pub mod media;
 
 pub static FAT32_DELETE_CHARS: &'static [char] = &['\t'];

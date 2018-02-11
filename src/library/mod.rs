@@ -52,6 +52,10 @@ impl LibraryFile {
             //  collect into a string
             .collect()
     }
+
+    pub fn debase(&self) -> &str {
+        self.path.strip_prefix(&self.base).unwrap().to_str().unwrap()
+    }
 }
 
 impl Eq for LibraryFile {}
@@ -85,7 +89,6 @@ pub fn get_dms_media_library() -> HashSet<LibraryFile> {
         None => HashSet::with_capacity(0)
     }
 }
-
 
 #[cfg(test)]
 pub mod test {

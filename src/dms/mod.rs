@@ -41,7 +41,8 @@ pub fn get_dms_mount_point() -> Option<PathBuf> {
 
     for line in buffer.lines().filter_map(|s| s.ok()).collect::<Vec<String>>() {
         if line.starts_with(device.to_str()?) {
-            return PROC_MOUNT_LINE.captures(&line)?.name("mount").map(|s| PathBuf::from(s));
+            return PROC_MOUNT_LINE.captures(&line)?.name("mount")
+                .map(|s| PathBuf::from(s.as_str()));
         }
     }
 

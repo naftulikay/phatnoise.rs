@@ -1,8 +1,9 @@
 use rayon::prelude::*;
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::env;
 use std::fs;
+use std::iter::Iterator;
 use std::path::Path;
 use std::process;
 
@@ -62,7 +63,7 @@ pub fn synchronize_media_files() {
     delete_files(&deleted);
 }
 
-fn copy_files(files: &Vec<&LibraryFile>, local: &HashSet<LibraryFile>, dms_dir: &Path) {
+fn copy_files(files: &Vec<&LibraryFile>, local: &BTreeSet<LibraryFile>, dms_dir: &Path) {
     for file in files {
         let (source, dest) = (&local.get(file).unwrap().path, Path::join(&dms_dir, Path::new(&file.debase())));
         debug!("Copying local file {} to DMS at {}...", source.display(), dest.display());
@@ -96,19 +97,19 @@ fn delete_files(files: &Vec<&LibraryFile>) {
 
 
 /// Retrieve a list of new files to be copied to the DMS.
-pub fn added_files<'a>(local: &'a HashSet<LibraryFile>, dms: &'a HashSet<LibraryFile>) ->
+pub fn added_files<'a>(local: &'a BTreeSet<LibraryFile>, dms: &'a BTreeSet<LibraryFile>) ->
         Vec<&'a LibraryFile> {
     local.difference(dms).collect()
 }
 
 /// Retrieve a list of deleted files to be removed from the DMS.
-pub fn deleted_files<'a>(local: &'a HashSet<LibraryFile>, dms: &'a HashSet<LibraryFile>) ->
+pub fn deleted_files<'a>(local: &'a BTreeSet<LibraryFile>, dms: &'a BTreeSet<LibraryFile>) ->
         Vec<&'a LibraryFile> {
     dms.difference(local).collect()
 }
 
 /// Retrieve a list of changed files to be updated on the DMS.
-pub fn changed_files<'a>(local: &'a HashSet<LibraryFile>, dms: &'a HashSet<LibraryFile>) ->
+pub fn changed_files<'a>(local: &'a BTreeSet<LibraryFile>, dms: &'a BTreeSet<LibraryFile>) ->
         Vec<&'a LibraryFile> {
     local.into_par_iter().filter(|p| {
         if !dms.contains(p) {

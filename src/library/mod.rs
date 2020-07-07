@@ -2,9 +2,12 @@ use dms;
 
 use std::cmp::Eq;
 use std::cmp::PartialEq;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::hash::Hash;
 use std::hash::Hasher;
+use std::cmp::Ord;
+use std::cmp::Ordering;
+use std::cmp::PartialOrd;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -73,20 +76,34 @@ impl Hash for LibraryFile {
     }
 }
 
-pub fn get_local_media_library(base: &Path) -> HashSet<LibraryFile> {
+impl Ord for LibraryFile {
+
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.path.cmp(&other.path)
+    }
+}
+
+impl PartialOrd for LibraryFile {
+
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+pub fn get_local_media_library(base: &Path) -> BTreeSet<LibraryFile> {
     utils::media::get_media_library(base).iter().map(|p| {
         LibraryFile::new(p, base, LibrarySource::Local)
     }).collect()
 }
 
-pub fn get_dms_media_library() -> HashSet<LibraryFile> {
+pub fn get_dms_media_library() -> BTreeSet<LibraryFile> {
     match dms::get_dms_mount_point() {
         Some(base) => {
             utils::media::get_media_library(&base).iter().map(|p| {
                 LibraryFile::new(p, &base, LibrarySource::DMS)
             }).collect()
         },
-        None => HashSet::with_capacity(0)
+        None => BTreeSet::new()
     }
 }
 

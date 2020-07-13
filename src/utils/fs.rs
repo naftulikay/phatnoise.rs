@@ -1,16 +1,14 @@
-use libc::c_int;
-use libc::c_long;
 use libc::futimens;
 use libc::time_t;
 use libc::timespec;
 
 use std::error::Error;
 use std::fmt;
+use std::fs;
 use std::fs::File;
-use std::time::UNIX_EPOCH;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
-use std::fs;
+use std::time::UNIX_EPOCH;
 
 #[derive(Debug)]
 pub struct ModTimeUpdateError {
@@ -30,7 +28,7 @@ impl fmt::Display for ModTimeUpdateError {
 }
 
 // Copy the modified time of source to dest
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 pub fn copy_mtime(source: &Path, dest: &Path) -> Result<(), ModTimeUpdateError> {
     let smeta = fs::metadata(source).unwrap();
     let s_modified = smeta.modified().unwrap();
@@ -46,22 +44,22 @@ pub fn copy_mtime(source: &Path, dest: &Path) -> Result<(), ModTimeUpdateError> 
 
         let accessed = timespec {
             tv_sec: accessed_duration.as_secs() as time_t,
-            tv_nsec: accessed_duration.subsec_nanos() as c_long
+            tv_nsec: accessed_duration.subsec_nanos() as libc::c_long,
         };
 
         let modified = timespec {
             tv_sec: modified_duration.as_secs() as time_t,
-            tv_nsec: modified_duration.subsec_nanos() as c_long
+            tv_nsec: modified_duration.subsec_nanos() as libc::c_long,
         };
 
         let times = [accessed, modified];
 
-        futimens(file.as_raw_fd() as c_int, times.as_ptr()) as isize
+        futimens(file.as_raw_fd() as libc::c_int, times.as_ptr()) as isize
     };
 
     if rc == 0 {
         Ok(())
     } else {
-        Err(ModTimeUpdateError { rc: rc })
+        Err(ModTimeUpdateError { rc })
     }
 }

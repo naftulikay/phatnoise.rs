@@ -1,16 +1,17 @@
+use log::debug;
+
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 
 pub struct StringPool {
-    map: RwLock<HashSet<Arc<str>>>
+    map: RwLock<HashSet<Arc<str>>>,
 }
 
 impl StringPool {
-
     pub fn new() -> Self {
         StringPool {
-            map: RwLock::new(HashSet::new())
+            map: RwLock::new(HashSet::new()),
         }
     }
 
